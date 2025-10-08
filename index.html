@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BHBA MART — User Shop</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root{--primary:#4e37b2;--accent:#36b9cc;--danger:#ff6b6b;--bg:#f5f7fb}
+    body{background:var(--bg);font-family:Arial,Helvetica,sans-serif;margin:0;padding-bottom:80px}
+    header{background:var(--primary);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:1200;display:flex;justify-content:space-between;align-items:center}
+    .brand{font-weight:700}
+    .container{padding:12px}
+    .hero{border-radius:12px;overflow:hidden;margin-bottom:12px;max-height:320px}
+    .hero img{width:100%;height:320px;object-fit:cover}
+    .categories{display:flex;gap:8px;overflow:auto;padding-bottom:8px;margin-bottom:12px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+    .cardp{background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 20px rgba(78,55,178,0.04);display:flex;flex-direction:column;height:100%}
+    .cardp img{width:100%;height:140px;object-fit:cover;border-radius:8px}
+    .price{color:var(--primary);font-weight:700}
+    .muted{color:#666;font-size:13px}
+    nav.bottom{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;z-index:1300}
+    nav.bottom a{color:#333;text-decoration:none;text-align:center;flex:1}
+    .cart-floating{position:fixed;right:16px;bottom:70px;z-index:1300}
+    .modal-img{width:100%;height:320px;object-fit:cover;border-radius:8px}
+    @media(max-width:480px){ .hero img{height:200px} .cardp img{height:110px} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">🛒 BHBA MART</div>
+    <div>
+      <span id="userLabel" class="badge bg-light text-dark">Guest</span>
+      <button id="btnLogin" class="btn btn-sm btn-light">Login</button>
+      <button id="btnLogout" class="btn btn-sm btn-outline-light" style="display:none">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="heroSlider" class="hero"><img src="https://via.placeholder.com/1200x320?text=BHBA+MART" id="heroImg"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0">Products</h5>
+      <div style="width:220px" class="input-group">
+        <input id="searchInput" class="form-control form-control-sm" placeholder="Search...">
+        <button id="searchBtn" class="btn btn-sm btn-outline-secondary">Search</button>
+      </div>
+    </div>
+
+    <div id="productsGrid" class="grid"></div>
+  </div>
+
+  <!-- Cart floating button -->
+  <div class="cart-floating">
+    <button id="openCartBtn" class="btn btn-lg" style="background:var(--accent);color:#fff;border-radius:50px">🛒 <span id="cartCount">0</span></button>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom">
+    <a href="#" onclick="scrollToTop()">🏠<div style="font-size:12px">Home</div></a>
+    <a href="#" onclick="openCart()">🛒<div style="font-size:12px">Cart</div></a>
+    <a href="#" onclick="openWishlist()">❤️<div style="font-size:12px">Wishlist</div></a>
+    <a href="#" onclick="openOrders()">📦<div style="font-size:12px">My Orders</div></a>
+  </nav>
+
+  <!-- Product Modal -->
+  <div class="modal fade" id="productModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-body p-3">
+    <div class="row g-2">
+      <div class="col-md-6"><img id="modalImage" class="modal-img" src=""></div>
+      <div class="col-md-6">
+        <h5 id="modalTitle"></h5>
+        <p id="modalDesc" class="muted"></p>
+        <p><span id="modalPrice" class="price"></span> <small id="modalOrig" class="text-muted"></small></p>
+        <p><b>Delivery:</b> <span id="modalDelivery">2-4 business days</span></p>
+        <div class="d-grid gap-2">
+          <button id="modalAdd" class="btn btn-primary">Add to Cart</button>
+          <button id="modalBuy" class="btn btn-outline-secondary">Buy Now</button>
+        </div>
+      </div>
+    </div>
+  </div></div></div></div>
+
+  <!-- Cart Modal -->
+  <div class="modal fade" id="cartModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Your Cart</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-3">
+      <div id="cartItems"></div>
+      <hr>
+      <h6>Delivery Details</h6>
+      <input id="shipName" class="form-control mb-2" placeholder="Full Name">
+      <input id="shipPhone" class="form-control mb-2" placeholder="Contact Number">
+      <input id="shipPin" class="form-control mb-2" placeholder="Pin Code">
+      <input id="shipState" class="form-control mb-2" placeholder="State">
+      <input id="shipCity" class="form-control mb-2" placeholder="City">
+      <textarea id="shipAddress" class="form-control mb-2" placeholder="Full Address"></textarea>
+      <div class="d-flex gap-2">
+        <input id="couponInput" class="form-control" placeholder="Discount code (optional)">
+        <button id="applyCoupon" class="btn btn-outline-primary">Apply</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Continue shopping</button><button id="checkoutBtn" class="btn btn-success">Checkout via WhatsApp</button></div>
+  </div></div></div></div>
+
+  <!-- List Modal (Wishlist / Orders) -->
+  <div class="modal fade" id="listModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header"><h5 id="listTitle"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="listBody"></div></div></div></div>
+
+  <!-- Login Modal -->
+  <div class="modal fade" id="loginModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>Login</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3">
+    <input id="loginEmail" class="form-control mb-2" placeholder="Email">
+    <input id="loginPass" type="password" class="form-control mb-2" placeholder="Password">
+    <div class="d-grid gap-2"><button id="doLogin" class="btn btn-primary">Login</button><button id="doRegister" class="btn btn-outline-secondary">Register</button></div>
+  </div></div></div></div>
+
+  <!-- Firebase SDKs compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ========== FIREBASE CONFIG (bhba-mart-in) ==========
+    const firebaseConfig = {
+      apiKey: "AIzaSyDoSo4uw7_E_Ssxf3Ph8nr2aDBaBwTspQk",
+      authDomain: "bhba-mart-in.firebaseapp.com",
+      databaseURL: "https://bhba-mart-in-default-rtdb.firebaseio.com",
+      projectId: "bhba-mart-in",
+      storageBucket: "bhba-mart-in.firebasestorage.app",
+      messagingSenderId: "1084676808902",
+      appId: "1:1084676808902:web:7b4391419e982a781f77c7",
+      measurementId: "G-YXF63N7H6T"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // state
+    let productsCache = {};
+    let slidesCache = {};
+    let adminSettings = { whatsappNumber:'+916297735446' };
+    let discounts = {};
+    let userId = localStorage.getItem('bhba_userid') || ('guest_'+Date.now());
+    localStorage.setItem('bhba_userid', userId);
+
+    // cart/wishlist in localStorage
+    function readCart(){ try{return JSON.parse(localStorage.getItem('bhba_cart')||'[]')}catch(e){return []} }
+    function writeCart(c){ localStorage.setItem('bhba_cart', JSON.stringify(c)); updateCartCount(); }
+    function readWL(){ try{return JSON.parse(localStorage.getItem('bhba_wl')||'[]')}catch(e){return []} }
+    function writeWL(w){ localStorage.setItem('bhba_wl', JSON.stringify(w)); }
+
+    // helpers
+    const $ = id => document.getElementById(id);
+    function toast(m){ console.log(m); alert(m); }
+    function formatINR(n){ return '₹'+Number(n||0).toLocaleString('en-IN'); }
+    function scrollToTop(){ window.scrollTo({top:0,behavior:'smooth'}); }
+
+    // listen products/slides/settings/discounts
+    db.ref('products').on('value', snap => { productsCache = snap.val() || {}; renderProducts(); });
+    db.ref('slides').on('value', snap => { slidesCache = snap.val() || {}; renderSlides(); });
+    db.ref('adminSettings').on('value', snap => { adminSettings = snap.val() || adminSettings; });
+    db.ref('discounts').on('value', snap => { discounts = snap.val() || {}; });
+
+    // render slides (fixed responsive height)
+    function renderSlides(){
+      const el = $('heroImg');
+      const arr = Object.values(slidesCache || {});
+      if(arr.length===0){ el.src = 'https://via.placeholder.com/1200x320?text=BHBA+MART'; return; }
+      el.src = arr[0].imageURL;
+      // cycle
+      let idx = 0;
+      setInterval(()=>{ idx = (idx +1) % arr.length; el.src = arr[idx].imageURL; }, 3500);
+    }
+
+    // render products grid
+    function renderProducts(q=''){
+      const grid = $('productsGrid'); grid.innerHTML='';
+      const entries = Object.entries(productsCache||{});
+      if(entries.length===0){ grid.innerHTML = '<div class="muted">No products yet</div>'; updateCartCount(); return; }
+      entries.forEach(([id,p])=>{
+        if(q && !(p.name||'').toLowerCase().includes(q.toLowerCase())) return;
+        const card = document.createElement('div'); card.className = 'cardp';
+        card.innerHTML = `<img src="${p.imageURL||p.img||'https://via.placeholder.com/300'}" alt="">
+          <h6 class="mt-2">${p.name}</h6>
+          <div class="muted">${p.category||''}</div>
+          <div class="price mt-1">${formatINR(p.price)}</div>
+          <div class="mt-auto d-flex gap-2"><button class="btn btn-sm btn-outline-secondary w-100" data-wl="${id}">❤ Wishlist</button><button class="btn btn-sm btn-primary w-100" data-add="${id}">Add</button></div>`;
+        grid.appendChild(card);
+
+        card.querySelector('[data-add]').addEventListener('click', ()=> { addToCart(id,1); toast('Added to cart'); });
+        card.querySelector('[data-wl]').addEventListener('click', ()=> toggleWL(id));
+        card.querySelector('img').addEventListener('click', ()=> openProductModal(id));
+        card.querySelector('h6').addEventListener('click', ()=> openProductModal(id));
+      });
+      updateCartCount();
+    }
+
+    // product modal open
+    function openProductModal(id){
+      const p = productsCache[id]; if(!p) return;
+      $('modalImage').src = p.imageURL || '';
+      $('modalTitle').innerText = p.name || '';
+      $('modalDesc').innerText = p.description || '';
+      $('modalPrice').innerText = formatINR(p.price);
+      $('modalOrig').innerText = p.originalPrice ? formatINR(p.originalPrice) : '';
+      $('modalAdd').onclick = ()=> { addToCart(id,1); bootstrap.Modal.getInstance(document.getElementById('productModal')).hide(); toast('Added to cart'); };
+      $('modalBuy').onclick = ()=> { sendSingleBuyWhatsApp(id); bootstrap.Modal.getInstance(document.getElementById('productModal')).hide(); };
+      new bootstrap.Modal(document.getElementById('productModal')).show();
+    }
+
+    // cart methods
+    function addToCart(productId, qty=1){
+      let c = readCart(); const it = c.find(x=> x.productId===productId);
+      if(it) it.qty = Number(it.qty||0) + Number(qty); else c.push({ productId, qty: Number(qty) });
+      writeCart(c);
+    }
+    function removeCart(productId){ let c = readCart(); c = c.filter(x=> x.productId !== productId); writeCart(c); renderCartModal(); }
+    function changeQty(productId, delta){ let c = readCart(); const it = c.find(x=> x.productId===productId); if(!it) return; it.qty = Math.max(0, Number(it.qty||0) + Number(delta)); if(it.qty===0) c = c.filter(x=> x.productId !== productId); writeCart(c); renderCartModal(); }
+    function updateCartCount(){ const c = readCart().reduce((s,i)=> s + Number(i.qty||0), 0); $('cartCount').innerText = c; }
+
+    function renderCartModal(){
+      const cart = readCart(); const container = $('cartItems'); container.innerHTML = '';
+      if(cart.length===0){ container.innerHTML = '<div class="muted">Cart is empty</div>'; return; }
+      cart.forEach(ci=>{
+        const p = productsCache[ci.productId]; if(!p) return;
+        const line = Number(p.price||0) * Number(ci.qty||1);
+        const div = document.createElement('div'); div.className='d-flex align-items-center gap-3 mb-2';
+        div.innerHTML = `<div style="width:90px"><img src="${p.imageURL}" style="width:90px;height:60px;object-fit:cover;border-radius:6px"></div>
+          <div style="flex:1"><b>${p.name}</b><div class="muted">₹${Number(p.price).toLocaleString('en-IN')} × ${ci.qty} = ₹${line.toLocaleString('en-IN')}</div></div>
+          <div><button class="btn btn-sm btn-outline-secondary" data-dec="${ci.productId}">-</button><button class="btn btn-sm btn-outline-secondary ms-1" data-inc="${ci.productId}">+</button><button class="btn btn-sm btn-danger ms-2" data-rm="${ci.productId}">Remove</button></div>`;
+        container.appendChild(div);
+      });
+      container.querySelectorAll('[data-dec]').forEach(b=> b.onclick = ()=> { changeQty(b.getAttribute('data-dec'), -1); });
+      container.querySelectorAll('[data-inc]').forEach(b=> b.onclick = ()=> { changeQty(b.getAttribute('data-inc'), +1); });
+      container.querySelectorAll('[data-rm]').forEach(b=> b.onclick = ()=> { removeCart(b.getAttribute('data-rm')); });
+    }
+
+    function openCart(){ renderCartModal(); new bootstrap.Modal(document.getElementById('cartModal')).show(); }
+
+    // wishlist
+    function toggleWL(productId){
+      let wl = readWL();
+      if(wl.includes(productId)) { wl = wl.filter(x=> x!== productId); toast('Removed from wishlist'); } else { wl.push(productId); toast('Added to wishlist'); }
+      writeWL(wl);
+    }
+    function openWishlist(){
+      const wl = readWL(); const items = wl.map(id => productsCache[id]).filter(Boolean);
+      const body = items.length ? items.map(p=>`<div class="card p-2 mb-2"><b>${p.name}</b><div class="muted">${formatINR(p.price)}</div></div>`).join('') : '<div class="muted">No wishlist items</div>';
+      $('listTitle').innerText = 'Wishlist'; $('listBody').innerHTML = body; new bootstrap.Modal(document.getElementById('listModal')).show();
+    }
+
+    // Checkout: requires login. Save checkoutRequest and open WhatsApp to admin
+    $('checkoutBtn').addEventListener('click', async ()=>{
+      if(!auth.currentUser) { // require login
+        new bootstrap.Modal(document.getElementById('loginModal')).show();
+        return;
+      }
+      const cart = readCart(); if(cart.length===0) return toast('Cart empty');
+      const name = $('shipName').value.trim(); const phone = $('shipPhone').value.trim(); const pincode = $('shipPin').value.trim(); const state = $('shipState').value.trim(); const city = $('shipCity').value.trim(); const address = $('shipAddress').value.trim();
+      if(!name||!phone||!pincode||!state||!city||!address) return toast('Please fill all delivery details');
+
+      // calculate total and apply coupon if any
+      let total = 0; let itemsText = [];
+      cart.forEach(ci=>{ const p = productsCache[ci.productId]; if(!p) return; total += Number(p.price||0) * Number(ci.qty||1); itemsText.push(`${p.name} x${ci.qty}`); });
+
+      // coupon check
+      const coupon = $('couponInput').value.trim();
+      let discountPercent = 0;
+      if(coupon && discounts && discounts[coupon]) discountPercent = Number(discounts[coupon].percent||0);
+      const discountAmount = Math.round(total * (discountPercent/100));
+      const finalTotal = total - discountAmount;
+
+      // save checkoutRequest
+      const reqRef = db.ref('checkoutRequests').push();
+      const reqObj = {
+        requestId: reqRef.key,
+        userId: auth.currentUser.uid,
+        name, phone, pincode, state, city, address,
+        items: itemsText.join(', '),
+        totalAmount: total,
+        discountPercent, finalAmount: finalTotal,
+        createdAt: Date.now()
+      };
+      await reqRef.set(reqObj);
+
+      // WhatsApp text (admin number from settings)
+      const waRaw = (adminSettings.whatsappNumber || '+916297735446').replace(/\D/g,'');
+      const lines = [];
+      lines.push('*New Checkout Request — BHBA MART*');
+      lines.push(`UserID: ${auth.currentUser.uid}`);
+      lines.push(`Name: ${name}`);
+      lines.push(`Phone: ${phone}`);
+      lines.push(`Pin: ${pincode}, ${city}, ${state}`);
+      lines.push(`Address: ${address}`);
+      lines.push('');
+      lines.push('Items:');
+      cart.forEach(ci=> { const p = productsCache[ci.productId]; if(p) lines.push(`- ${p.name} x${ci.qty} = ₹${(Number(p.price)*ci.qty).toLocaleString('en-IN')}`); });
+      lines.push('');
+      lines.push(`Subtotal: ₹${total.toLocaleString('en-IN')}`);
+      if(discountPercent) lines.push(`Discount: ${discountPercent}% → -₹${discountAmount.toLocaleString('en-IN')}`);
+      lines.push(`Total: ₹${finalTotal.toLocaleString('en-IN')}`);
+      lines.push('');
+      lines.push('Use this UserID to create order in Admin Panel.');
+
+      localStorage.removeItem('bhba_cart'); updateCartCount();
+      new bootstrap.Modal(document.getElementById('cartModal')).hide();
+      window.open(`https://wa.me/${waRaw}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+      toast('Request sent to admin (WhatsApp) and saved to requests.');
+    });
+
+    // Buy Now (single product)
+    function sendSingleBuyWhatsApp(productId){
+      if(!auth.currentUser){ new bootstrap.Modal(document.getElementById('loginModal')).show(); return; }
+      const p = productsCache[productId]; if(!p) return;
+      const waRaw = (adminSettings.whatsappNumber || '+916297735446').replace(/\D/g,'');
+      const lines = [`*Buy Now — BHBA MART*`, `UserID: ${auth.currentUser.uid}`, `Product: ${p.name}`, `Price: ₹${Number(p.price).toLocaleString('en-IN')}`];
+      window.open(`https://wa.me/${waRaw}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+    }
+
+    // My Orders modal
+    function openOrders(){
+      if(!auth.currentUser){ new bootstrap.Modal(document.getElementById('loginModal')).show(); return; }
+      db.ref(`orders/${auth.currentUser.uid}`).once('value').then(snap=>{
+        const obj = snap.val() || {}; const arr = Object.entries(obj).map(([k,v])=> v).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+        const body = arr.length ? arr.map(o=> `<div class="card p-2 mb-2"><div><b>Order:</b> ${o.orderId}</div><div class="muted">${(o.products||[]).map(it=> (it.name||it)+' x'+(it.qty||1)).join(', ')}</div><div><b>Status:</b> ${o.status}</div><div class="muted">Placed: ${new Date(o.createdAt||0).toLocaleString()}</div></div>`).join('') : '<div class="muted">No orders yet</div>';
+        $('listTitle').innerText = 'My Orders'; $('listBody').innerHTML = body; new bootstrap.Modal(document.getElementById('listModal')).show();
+      });
+    }
+
+    // LOGIN flow
+    document.getElementById('btnLogin').addEventListener('click', ()=> new bootstrap.Modal(document.getElementById('loginModal')).show());
+    document.getElementById('doLogin').addEventListener('click', ()=> {
+      const em = $('loginEmail').value.trim(); const pw = $('loginPass').value.trim();
+      if(!em||!pw) return toast('Email & password required');
+      auth.signInWithEmailAndPassword(em,pw).then(()=> { toast('Login success'); new bootstrap.Modal(document.getElementById('loginModal')).hide(); }).catch(e=> toast(e.message));
+    });
+    document.getElementById('doRegister').addEventListener('click', ()=> {
+      const em = $('loginEmail').value.trim(); const pw = $('loginPass').value.trim();
+      if(!em||!pw) return toast('Email & password required');
+      auth.createUserWithEmailAndPassword(em,pw).then(res=> {
+        // store user profile basic
+        db.ref(`users/${res.user.uid}`).set({ name: em.split('@')[0], email: em, createdAt: Date.now() });
+        toast('Registered & logged in');
+        new bootstrap.Modal(document.getElementById('loginModal')).hide();
+      }).catch(e=> toast(e.message));
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
+
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        $('userLabel').innerText = user.email || user.uid;
+        $('btnLogin').style.display='none'; $('btnLogout').style.display='inline-block';
+        // listen my orders realtime
+        db.ref(`orders/${user.uid}`).on('value', snap => {
+          // nothing here, openOrders reads one-time; but we keep ability to auto-notify if needed
+        });
+      } else {
+        $('userLabel').innerText = 'Guest';
+        $('btnLogin').style.display='inline-block'; $('btnLogout').style.display='none';
+      }
+    });
+
+    // UI helpers
+    document.getElementById('searchBtn').addEventListener('click', ()=> renderProducts($('searchInput').value.trim()));
+    document.getElementById('searchInput').addEventListener('keyup', (e)=> { if(e.key==='Enter') renderProducts($('searchInput').value.trim()); });
+    document.getElementById('openCartBtn').addEventListener('click', ()=> openCart());
+    document.getElementById('applyCoupon').addEventListener('click', ()=> {
+      const code = $('couponInput').value.trim();
+      if(!code) return toast('Enter coupon code');
+      if(discounts && discounts[code]) toast(`Applied ${discounts[code].percent}%`);
+      else toast('Invalid code');
+    });
+
+    // initial
+    setTimeout(()=>{ renderSlides(); renderProducts(); updateCartCount(); }, 400);
+  </script>
+</body>
+</html>
+<script type="text/javascript">
+	atOptions = {
+		'key' : 'abd90dd4dce7e7a1f99c218861b8aa3b',
+		'format' : 'iframe',
+		'height' : 50,
+		'width' : 320,
+		'params' : {}
+	};
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/abd90dd4dce7e7a1f99c218861b8aa3b/invoke.js"></script>
